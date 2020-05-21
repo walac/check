@@ -19,6 +19,7 @@
  */
 
 #include "../lib/libcompat.h"
+#include "config.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -33,11 +34,31 @@
 #include "check_impl.h"
 #include "check_pack.h"
 
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+
+#ifdef HAVE_SYNCHAPI_H
+#include <synchapi.h>
+#endif
+
+#if defined(HAVE_INIT_ONCE_BEGIN_INITIALIZE) && defined(HAVE_INIT_ONCE_COMPLETE)
+#define HAVE_WIN32_INIT_ONCE 1
+#endif
+
 #ifndef HAVE_PTHREAD
-#define pthread_mutex_lock(arg)
-#define pthread_mutex_unlock(arg)
 #define pthread_cleanup_push(f, a) {
 #define pthread_cleanup_pop(e) }
+#endif
+
+#ifndef HAVE_PTHREAD
+#if defined(HAVE_WIN32_INIT_ONCE)
+#define pthread_mutex_lock(arg) EnterCriticalSection(arg)
+#define pthread_mutex_unlock(arg) LeaveCriticalSection(arg)
+#else
+#define pthread_mutex_lock(arg)
+#define pthread_mutex_unlock(arg)
+#endif
 #endif
 
 /* Maximum size for one message in the message stream. */
@@ -348,12 +369,15 @@ static void check_type(int type, const char *file, int line)
         eprintf("Bad message type arg %d", file, line, type);
 }
 
-#ifdef HAVE_PTHREAD
+#if defined HAVE_PTHREAD
 static pthread_mutex_t ck_mutex_lock = PTHREAD_MUTEX_INITIALIZER;
 static void ppack_cleanup(void *mutex)
 {
     pthread_mutex_unlock((pthread_mutex_t *)mutex);
 }
+#elif defined HAVE_WIN32_INIT_ONCE
+static INIT_ONCE init_once = INIT_ONCE_STATIC_INIT;
+static CRITICAL_SECTION ck_mutex_lock;
 #endif
 
 void ppack(FILE * fdes, enum ck_msg_type type, CheckMsg * msg)
@@ -361,6 +385,20 @@ void ppack(FILE * fdes, enum ck_msg_type type, CheckMsg * msg)
     char *buf = NULL;
     int n;
     size_t r;
+
+#if !defined(HAVE_PTHREAD) && defined(HAVE_WIN32_INIT_ONCE)
+    BOOL pending;
+    if (!InitOnceBeginInitialize(&init_once, 0, &pending, NULL))
+    {
+        eprintf("Cannot initialize Win32 synch object", __FILE__, __LINE__ - 5);
+        return;
+    }
+
+    if (pending)
+        InitializeCriticalSection(&ck_mutex_lock);
+
+    InitOnceComplete(&init_once, 0, NULL);
+#endif
 
     n = pack(type, &buf, msg);
     if(n < 0)
