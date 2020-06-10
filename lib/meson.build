@@ -6,6 +6,7 @@ if not librt.found()
       'timer_create.c',
       'timer_delete.c',
       'timer_settime.c',
+      'pthread_mutex.c',
   )
 endif
 
