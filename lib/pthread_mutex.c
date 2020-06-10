@@ -54,7 +54,7 @@ int pthread_mutex_destroy(pthread_mutex_t *mutex)
 
 int pthread_mutex_lock(pthread_mutex_t *mutex)
 {
-    if (mutex_mutex(mutex) != 0)
+    if (mutex_init(mutex) != 0)
         return -1;
 
     return WaitForSingleObject(mutex->mutex, INFINITE) != WAIT_OBJECT_0
