@@ -49,7 +49,7 @@ int pthread_mutex_init(pthread_mutex_t *mutex, pthread_mutexattr_t *attr)
 
 int pthread_mutex_destroy(pthread_mutex_t *mutex)
 {
-    return CloseHandle(mutex->handle) ? 0 : -1;
+    return CloseHandle(mutex->mutex) ? 0 : -1;
 }
 
 int pthread_mutex_lock(pthread_mutex_t *mutex)
