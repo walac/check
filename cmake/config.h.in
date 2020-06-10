@@ -333,6 +333,9 @@ typedef uint64_t uintmax_t;
 /* Define to 1 if you have the `_strdup' function. */
 #cmakedefine HAVE__STRDUP 1
 
+/* Define 1 if you have pthread support. */
+#cmakedefine HAVE_PTHREAD 1
+
 /* Version number of Check */
 #cmakedefine CHECK_VERSION "${CHECK_MAJOR_VERSION}.${CHECK_MINOR_VERSION}.${CHECK_MICRO_VERSION}"
 

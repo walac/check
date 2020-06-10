@@ -22,6 +22,8 @@
 #
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
+include(CheckCCompilerFlag)
+
 # Detect if Check is being used in another build as a subproject
 # probably with command FetchContent*().
 set(THIS_IS_SUBPROJECT FALSE)
@@ -155,10 +157,10 @@ ck_check_include_file("strings.h" HAVE_STRINGS_H)
 ck_check_include_file("sys/time.h" HAVE_SYS_TIME_H)
 ck_check_include_file("time.h" HAVE_TIME_H)
 ck_check_include_file("unistd.h" HAVE_UNISTD_H)
+ck_check_include_file("pthread.h" HAVE_PTHREAD)
 
 # check if we have windows.h on native windows environments
 ck_check_include_file("windows.h" HAVE_WINDOWS_H)
-ck_check_include_file("synchapi.h" HAVE_SYNCHAPI_H)
 
 ###############################################################################
 # Check functions
@@ -233,6 +235,14 @@ if(HAVE_REGEX_H AND HAVE_REGCOMP AND HAVE_REGEXEC)
   set(HAVE_REGEX 1)
   add_definitions(-DENABLE_REGEX=1)
   set(ENABLE_REGEX 1)
+endif()
+
+if (HAVE_PTHREAD)
+  check_c_compiler_flag("-pthread" HAVE_PTHREADS_FLAG)
+  if (HAVE_PTHREADS_FLAG)
+    add_definitions("-pthread")
+    add_link_options("-pthread")
+  endif()
 endif()
 
 
