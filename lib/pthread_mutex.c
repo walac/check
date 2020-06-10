@@ -31,12 +31,12 @@ static int mutex_init(pthread_mutex_t *mutex)
     int ret = 0;
     if (pending)
     {
-        self->mutex = CreateMutexW(NULL, FALSE, NULL);
+        mutex->mutex = CreateMutexW(NULL, FALSE, NULL);
         if (!mutex->mutex)
             ret = -1;
     }
 
-    InitOnceComplete(&self->init, 0, NULL);
+    InitOnceComplete(&mutex->init, 0, NULL);
 
     return ret;
 }
